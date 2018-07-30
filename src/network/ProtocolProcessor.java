@@ -27,8 +27,28 @@ public class ProtocolProcessor implements Runnable{
 		
 		switch(message.getProtocolHeader()) {
 			case "001": 
-				System.out.println("A comunicação funciona");
-				System.out.println("Mensagem Recebida:" + (String)message.getContentMessage());
+				System.out.println("O processo " + message.getProcessID() + " uniu-se ao grupo.");
+				ServerController.getInstance().addToGroup(message.getProcessID());
+				break;
+			case "002":
+				System.out.println("O processo "+ message.getProcessID() + " está ativo.");
+				ServerController.getInstance().addToGroup(message.getProcessID());
+				break;
+			case "003":
+				System.out.println("O processo "+ message.getProcessID() + " quer saber quem está ativo.");
+				ServerController.getInstance().sendMessage("002", ServerController.getInstance().getProcessID());
+				break;
+			case "004":
+				System.out.println("O processo "+ message.getProcessID() + " realizou um evento. Aguardando confirmação...");
+				break;
+			case "005":
+				System.out.println("O processo "+ message.getProcessID() + " quer confirmar um evento.");
+				break;
+			case "006":
+				System.out.println("O processo "+ message.getProcessID() + " confirmou um evento.");
+				break;
+			case "007":
+				System.out.println("O processo "+ message.getProcessID() + " permitiu a entrega da mensagem para a aplicação.");
 				break;
 		}
 		

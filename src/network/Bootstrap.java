@@ -15,6 +15,6 @@ public class Bootstrap {
 		new Thread(server).start();
 		
 		controller.setServer(server);
-		controller.sendMessage("001", "Teste inicial");
+		controller.sendJoinMessage();
 	}
 }
