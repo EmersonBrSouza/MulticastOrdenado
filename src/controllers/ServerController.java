@@ -140,4 +140,26 @@ public class ServerController {
 	public void clearGroup () {
 		this.connectedMembers = new ConcurrentHashMap<String, Boolean>();
 	}
+
+	public void sendConfirmation(String processID, Integer messageTimestamp, Message message) {
+		clock.tick(message.getTimestamp());
+		
+		while(!orderedMessages.peek().getProcessID().equals(processID) 
+				&& !orderedMessages.peek().getTimestamp().equals(messageTimestamp)) {
+			
+			orderedMessages.add(orderedMessages.poll());
+		}
+		
+		this.sendMessage("006", new Object[] {processID, messageTimestamp});
+	}
+
+	public void validateEvent(String processID, Integer messageTimestamp, Message message) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void sendToApplication(String processID, Integer messageTimestamp, Message message) {
+		// TODO Auto-generated method stub
+		
+	}
 }

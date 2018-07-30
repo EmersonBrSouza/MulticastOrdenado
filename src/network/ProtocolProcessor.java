@@ -26,29 +26,35 @@ public class ProtocolProcessor implements Runnable{
 		if (this.isSelfMessage(message)) return;
 		
 		switch(message.getProtocolHeader()) {
-			case "001": 
+			case "001": // When one process join to group
 				System.out.println("O processo " + message.getProcessID() + " uniu-se ao grupo.");
 				ServerController.getInstance().addToGroup(message.getProcessID());
 				break;
-			case "002":
+			case "002": // When some process notifies if is active
 				System.out.println("O processo "+ message.getProcessID() + " está ativo.");
 				ServerController.getInstance().addToGroup(message.getProcessID());
 				break;
-			case "003":
+			case "003": // When some process wants know how many processes are active
 				System.out.println("O processo "+ message.getProcessID() + " quer saber quem está ativo.");
 				ServerController.getInstance().sendMessage("002", ServerController.getInstance().getProcessID());
 				break;
 			case "004":
 				System.out.println("O processo "+ message.getProcessID() + " realizou um evento. Aguardando confirmação...");
 				break;
-			case "005":
+			case "005": // When some process wants confirm one event
 				System.out.println("O processo "+ message.getProcessID() + " quer confirmar um evento.");
+				Object[] data = (Object[])message.getContentMessage();
+				ServerController.getInstance().sendConfirmation((String)data[0], (Integer)data[1], message);
 				break;
-			case "006":
+			case "006": // When some process sends a event confirmation
 				System.out.println("O processo "+ message.getProcessID() + " confirmou um evento.");
+				Object[] event = (Object[])message.getContentMessage();
+				ServerController.getInstance().validateEvent((String)event[0], (Integer)event[1], message);
 				break;
 			case "007":
 				System.out.println("O processo "+ message.getProcessID() + " permitiu a entrega da mensagem para a aplicação.");
+				Object[] validMessage = (Object[])message.getContentMessage();
+				ServerController.getInstance().sendToApplication((String)validMessage[0], (Integer)validMessage[1], message);
 				break;
 		}
 		
