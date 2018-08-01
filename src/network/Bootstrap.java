@@ -1,5 +1,6 @@
 package network;
 
+import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -21,6 +22,16 @@ public class Bootstrap {
 		controller.queueProcessor();
 		controller.sendJoinMessage();
 		
-		new ProcessView();
+		Timer t = new Timer();
+		
+		TimerTask task = new TimerTask() {
+			public void run () {
+				Random r = new Random();
+				int value = r.nextInt(5) + 1;
+				controller.sendRandomAction(value);
+			}
+		};
+		
+		t.schedule(task, 3000, 10000);
 	}
 }

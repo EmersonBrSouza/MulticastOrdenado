@@ -56,7 +56,7 @@ public class ProtocolProcessor implements Runnable{
 			case "006":
 				if (this.isSelfMessage(message)) return;
 				Object[] validMessage = (Object[])message.getContentMessage();
-				ServerController.getInstance().sendToApplication((String)validMessage[0], (Integer)validMessage[1]);
+				ServerController.getInstance().sendToApplication((String)validMessage[0], (Integer)validMessage[1], message);
 				break;
 		}
 		

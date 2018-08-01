@@ -3,9 +3,7 @@ package controllers;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.MulticastSocket;
-import java.util.Enumeration;
 import java.util.PriorityQueue;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -163,14 +161,9 @@ public class ServerController {
 		orderedMessages.peek().receiveConfirmation(processID);
 	}
 
-	public void sendToApplication(String processID, Integer messageTimestamp) {
-		
-		if(orderedMessages.peek().getProcessID().equals(processID) && orderedMessages.peek().getTimestamp().equals(messageTimestamp)) {
-			System.out.println("Mensagem entregue à aplicacação. Evento: " +  (Integer)orderedMessages.peek().getContentMessage() + 
-								" -- Tempo Lógico: " + orderedMessages.peek().getTimestamp());
-			orderedMessages.poll();
-		}
-		
+	public void sendToApplication(String processID, Integer messageTimestamp, Message message) {
+		if (!message.getConfirmations().containsKey(this.getProcessID())) return;
+		removeFromQueue();
 	}
 	
 	public void reorderQueue (String processID, Integer messageTimestamp) {
@@ -201,9 +194,11 @@ public class ServerController {
 							sleep(2000);
 							if (orderedMessages.size() > 0) {
 								if (orderedMessages.peek().isConfirmed()) {
-									sendMessage("006", new Object[] {currentMessage.getProcessID(), currentMessage.getTimestamp()});
+									sendMessage("006", new Object[] {currentMessage.getProcessID(), currentMessage.getTimestamp()}, orderedMessages.peek().getConfirmations());
 									sleep(500);
-									sendToApplication(currentMessage.getProcessID(), currentMessage.getTimestamp());
+									removeFromQueue();
+									
+									//sendToApplication(currentMessage.getProcessID(), currentMessage.getTimestamp(), null);
 								}								
 							}
 						}
@@ -218,15 +213,28 @@ public class ServerController {
 	}
 
 	public void sendRandomAction(int value) {
-		try {
-			clearGroup();
-			sendMessage("001", ""); // Find active nodes
-			Thread.sleep(2000);
-			// Send a message with event
-			clock.tick();
-			this.sendMessage("003", value, this.connectedMembers);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}		
+		
+		Thread c = new Thread () {
+			public void run () {
+				try {
+					clearGroup();
+					sendMessage("001", ""); // Find active nodes
+					Thread.sleep(2000);
+					// Send a message with event
+					clock.tick();
+					sendMessage("003", value, connectedMembers);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+		};		
+		
+		c.start();
+	}
+	
+	private synchronized void removeFromQueue () {
+		System.out.println("Mensagem entregue à aplicação. Evento: " +  (Integer)orderedMessages.peek().getContentMessage() + 
+				" -- Tempo Lógico: " + orderedMessages.peek().getTimestamp());
+		orderedMessages.poll();
 	}
 }
