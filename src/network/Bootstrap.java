@@ -1,5 +1,8 @@
 package network;
 
+import java.util.Timer;
+import java.util.TimerTask;
+
 import javax.swing.JOptionPane;
 
 import controllers.ServerController;
@@ -15,6 +18,9 @@ public class Bootstrap {
 		new Thread(server).start();
 		
 		controller.setServer(server);
+		controller.queueProcessor();
 		controller.sendJoinMessage();
+		
+		new ProcessView();
 	}
 }

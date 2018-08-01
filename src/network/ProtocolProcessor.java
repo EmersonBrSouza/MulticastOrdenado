@@ -23,38 +23,40 @@ public class ProtocolProcessor implements Runnable{
 		
 		
 		Message message = (Message) this.getReceivedMessage();
-		if (this.isSelfMessage(message)) return;
+		
 		
 		switch(message.getProtocolHeader()) {
-			case "001": // When one process join to group
-				System.out.println("O processo " + message.getProcessID() + " uniu-se ao grupo.");
+			case "001": // When some process wants know how many processes are active
+				if (this.isSelfMessage(message)) return ;
+				String [] credentials = new String[] {message.getProcessID(), ServerController.getInstance().getProcessID()};
+				ServerController.getInstance().sendMessage("002", credentials);
+				break;
+			case "002": //When some process notify if is active
+				if (this.isSelfMessage(message)) return;
+				String [] active = (String[]) message.getContentMessage();
+				if (!active[0].equals(ServerController.getInstance().getProcessID())) return;
 				ServerController.getInstance().addToGroup(message.getProcessID());
 				break;
-			case "002": // When some process notifies if is active
-				System.out.println("O processo "+ message.getProcessID() + " está ativo.");
-				ServerController.getInstance().addToGroup(message.getProcessID());
-				break;
-			case "003": // When some process wants know how many processes are active
-				System.out.println("O processo "+ message.getProcessID() + " quer saber quem está ativo.");
-				ServerController.getInstance().sendMessage("002", ServerController.getInstance().getProcessID());
+			case "003":
+				System.out.println("O processo "+ message.getProcessID() + " realizou o evento:"+ (Integer)message.getContentMessage() +" no tempo:"+ message.getTimestamp() +" Aguardando confirmação...");
+				ServerController.getInstance().registerEvent(message);
 				break;
 			case "004":
-				System.out.println("O processo "+ message.getProcessID() + " realizou um evento. Aguardando confirmação...");
-				break;
-			case "005": // When some process wants confirm one event
-				System.out.println("O processo "+ message.getProcessID() + " quer confirmar um evento.");
+				if (this.isSelfMessage(message)) return;
 				Object[] data = (Object[])message.getContentMessage();
 				ServerController.getInstance().sendConfirmation((String)data[0], (Integer)data[1], message);
 				break;
-			case "006": // When some process sends a event confirmation
-				System.out.println("O processo "+ message.getProcessID() + " confirmou um evento.");
-				Object[] event = (Object[])message.getContentMessage();
-				ServerController.getInstance().validateEvent((String)event[0], (Integer)event[1], message);
+			case "005":
+				if (this.isSelfMessage(message)) return;
+				String[] response = (String[])message.getContentMessage();
+				if (response[1].equals(ServerController.getInstance().getProcessID())) {
+					ServerController.getInstance().validateEvent(response[0]);
+				}
 				break;
-			case "007":
-				System.out.println("O processo "+ message.getProcessID() + " permitiu a entrega da mensagem para a aplicação.");
+			case "006":
+				if (this.isSelfMessage(message)) return;
 				Object[] validMessage = (Object[])message.getContentMessage();
-				ServerController.getInstance().sendToApplication((String)validMessage[0], (Integer)validMessage[1], message);
+				ServerController.getInstance().sendToApplication((String)validMessage[0], (Integer)validMessage[1]);
 				break;
 		}
 		
